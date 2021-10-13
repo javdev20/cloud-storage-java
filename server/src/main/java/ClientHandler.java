@@ -1,6 +1,4 @@
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.net.Socket;
 
 public class ClientHandler implements Runnable{
@@ -19,6 +17,68 @@ public class ClientHandler implements Runnable{
         ) {
             System.out.printf("Client %s connected\n", socket.getInetAddress());
 
+            while (true) {
+                String command = in.readUTF();
+                if ("upload".equals(command)) {
+                    try {
+                        File file = new File("server/src/main/resources"  + File.separator + in.readUTF());
+                        if (!file.exists()) {
+                            file.createNewFile();
+                        }
+                        FileOutputStream fos = new FileOutputStream(file);
+
+                        long size = in.readLong();
+
+                        byte[] buffer = new byte[8 * 1024];
+
+                        for (int i = 0; i < (size + (buffer.length - 1)) / (buffer.length); i++) {
+                            int read = in.read(buffer);
+                            fos.write(buffer, 0, read);
+                        }
+
+                        fos.close();
+                        out.writeUTF("OK");
+                    } catch (Exception e) {
+                        out.writeUTF("FATAL ERROR");
+                    }
+                }
+
+                if (command.equals("download")) {
+                    try {
+                       File file = new File("server/src/main/resources"+ File.separator + in.readUTF());
+
+                       if (!file.exists()) {
+                           throw new FileNotFoundException();
+                       }
+
+                       FileInputStream fis = new FileInputStream(file);
+
+                       long fileLength = file.length();
+
+                       out.writeLong(fileLength);
+
+                       int read = 0;
+                       byte[] buffer = new byte[8 * 1024];
+
+                       while ((read = fis.read(buffer)) != -1) {
+                           out.write(buffer, 0, read);
+                       }
+
+                       out.flush();
+                       out.writeUTF("OK");
+
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if ("exit".equals(command)) {
+                    System.out.printf("Client %s disconnected correctly\n", socket.getInetAddress());
+                    break;
+                }
+
+                System.out.println(command);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
