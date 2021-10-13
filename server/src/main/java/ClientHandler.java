@@ -9,14 +9,14 @@ public class ClientHandler implements Runnable{
         this.socket = socket;
     }
 
+
     @Override
     public void run() {
         try (
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            DataInputStream in = new DataInputStream(socket.getInputStream());
+                DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                DataInputStream in = new DataInputStream(socket.getInputStream())
         ) {
             System.out.printf("Client %s connected\n", socket.getInetAddress());
-
             while (true) {
                 String command = in.readUTF();
                 if ("upload".equals(command)) {
@@ -43,32 +43,29 @@ public class ClientHandler implements Runnable{
                     }
                 }
 
-                if (command.equals("download")) {
+                if ("download".equals(command)) {
+
                     try {
-                       File file = new File("server/src/main/resources"+ File.separator + in.readUTF());
+                        File file = new File("server/src/main/resources"  + File.separator + in.readUTF());
+                        if (!file.exists()) {
+                            throw new FileNotFoundException();
+                        }
+                        long fileLength = file.length();
+                        FileInputStream fis = new FileInputStream(file);
 
-                       if (!file.exists()) {
-                           throw new FileNotFoundException();
-                       }
+                        out.writeLong(fileLength);
 
-                       FileInputStream fis = new FileInputStream(file);
+                        int read = 0;
+                        byte[] buffer = new byte[8 * 1024];
+                        while ((read = fis.read(buffer)) != -1) {
+                            out.write(buffer, 0, read);
+                        }
 
-                       long fileLength = file.length();
-
-                       out.writeLong(fileLength);
-
-                       int read = 0;
-                       byte[] buffer = new byte[8 * 1024];
-
-                       while ((read = fis.read(buffer)) != -1) {
-                           out.write(buffer, 0, read);
-                       }
-
-                       out.flush();
-                       out.writeUTF("OK");
-
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        fis.close();
+                        out.flush();
+                        out.writeUTF("OK");
+                    } catch (Exception e) {
+                        out.writeUTF("FATAL ERROR");
                     }
                 }
 
@@ -79,9 +76,8 @@ public class ClientHandler implements Runnable{
 
                 System.out.println(command);
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 }

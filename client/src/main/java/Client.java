@@ -1,10 +1,11 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
-import java.util.Scanner;
 
-public class Client {
-
-    private static Scanner command = new Scanner(System.in);
+public class Client extends JFrame {
     private final Socket socket;
     private final DataOutputStream out;
     private final DataInputStream in;
@@ -14,26 +15,42 @@ public class Client {
         out = new DataOutputStream(socket.getOutputStream());
         in = new DataInputStream(socket.getInputStream());
 
-        System.out.println("Введите комманду:");
+        setSize(300, 300);
+        JPanel panel = new JPanel(new GridLayout(2, 1));
 
-        while (true) {
+        JButton btnSend = new JButton("SEND");
+        JTextField textField = new JTextField();
 
-            String[] cmd = command.nextLine().split(" ");
-
-            if (cmd[0].equals("upload")) {
+        btnSend.addActionListener(a -> {
+            // upload 1.txt
+            // download img.png
+            String[] cmd = textField.getText().split(" ");
+            if ("upload".equals(cmd[0])) {
                 sendFile(cmd[1]);
-            } else if (cmd[0].equals("download")) {
+            } else if ("download".equals(cmd[0])) {
                 getFile(cmd[1]);
-            } else if (cmd[0].equals("exit")) {
-                break;
             }
-        }
+        });
+
+        panel.add(textField);
+        panel.add(btnSend);
+
+        add(panel);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                super.windowClosing(e);
+                sendMessage("exit");
+            }
+        });
+        setVisible(true);
     }
 
-    private void getFile(String fileName) throws IOException {
+    private void getFile(String fileName) {
 
         try {
-            File file = new File("client/src/main/resources"+ File.separator + fileName);
+            File file = new File("client/src/main/resources" + File.separator + fileName);
             if (!file.exists()) {
                 file.createNewFile();
             }
@@ -41,10 +58,9 @@ public class Client {
             out.writeUTF("download");
             out.writeUTF(fileName);
 
-            long size = in.readLong();
-
             FileOutputStream fos = new FileOutputStream(file);
 
+            long size = in.readLong();
             byte[] buffer = new byte[8 * 1024];
 
             for (int i = 0; i < (size + (buffer.length - 1)) / (buffer.length); i++) {
@@ -55,16 +71,17 @@ public class Client {
             fos.close();
 
             String status = in.readUTF();
-            System.out.println("Downloading status" + status);
-
-        } catch (Exception e) {
-            out.writeUTF("FATAL ERROR");
+            System.out.println("receiving status: " + status);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    private void sendFile(String fileName) {
+    private void sendFile(String filename) {
         try {
-            File file = new File("client/src/main/resources" + File.separator + fileName);
+            File file = new File("client/src/main/resources" + File.separator + filename);
             if (!file.exists()) {
                 throw  new FileNotFoundException();
             }
@@ -73,7 +90,7 @@ public class Client {
             FileInputStream fis = new FileInputStream(file);
 
             out.writeUTF("upload");
-            out.writeUTF(fileName);
+            out.writeUTF(filename);
             out.writeLong(fileLength);
 
             int read = 0;
@@ -92,7 +109,14 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
+    private void sendMessage(String message) {
+        try {
+            out.writeUTF(message);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws IOException {
