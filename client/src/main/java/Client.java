@@ -29,6 +29,8 @@ public class Client extends JFrame {
                 sendFile(cmd[1]);
             } else if ("download".equals(cmd[0])) {
                 getFile(cmd[1]);
+            } else if ("delete".equals(cmd[0])) {
+                deleteFile(cmd[1]);
             }
         });
 
@@ -45,6 +47,18 @@ public class Client extends JFrame {
             }
         });
         setVisible(true);
+    }
+
+    private void deleteFile(String fileName) {
+        try {
+            out.writeUTF("delete");
+            out.writeUTF(fileName);
+
+            String status = in.readUTF();
+            System.out.println("Deleting status " + status);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void getFile(String fileName) {

@@ -69,6 +69,27 @@ public class ClientHandler implements Runnable{
                     }
                 }
 
+                if ("delete".equals(command)) {
+                    try  {
+                        File file = new File("server/src/main/resources"+ File.separator + in.readUTF());
+
+                        if (!file.exists()) {
+                            throw new FileNotFoundException();
+                        }
+
+                        if (file.delete()) {
+                            out.writeUTF("OK");
+                        } else {
+                            out.writeUTF("NOT OK");
+                        }
+
+                    } catch (FileNotFoundException e) {
+                        out.writeUTF("FileNotFoundException");
+                        e.printStackTrace();
+                    }
+
+                }
+
                 if ("exit".equals(command)) {
                     System.out.printf("Client %s disconnected correctly\n", socket.getInetAddress());
                     break;
