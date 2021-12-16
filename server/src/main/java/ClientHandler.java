@@ -33,6 +33,8 @@ public class ClientHandler implements Runnable{
             myStmt = myConn.createStatement();
             while (true) {
                 String command = in.readUTF();
+
+                // upload to server
                 if ("upload".equals(command)) {
                     try {
                         File file = new File("server/src/main/resources"  + File.separator + in.readUTF());
@@ -57,6 +59,7 @@ public class ClientHandler implements Runnable{
                     }
                 }
 
+                // download from server
                 if ("download".equals(command)) {
 
                     try {
@@ -83,6 +86,7 @@ public class ClientHandler implements Runnable{
                     }
                 }
 
+                // deletion
                 if ("delete".equals(command)) {
                     try  {
                         File file = new File("server/src/main/resources"+ File.separator + in.readUTF());
@@ -103,6 +107,7 @@ public class ClientHandler implements Runnable{
                     }
                 }
 
+                // authorization
                 if ("auth".equals(command)) {
                     try {
                         String login = in.readUTF();
@@ -118,6 +123,7 @@ public class ClientHandler implements Runnable{
                     }
                 }
 
+                // registration
                 if ("reg".equals(command)) {
                     try {
                         String login = in.readUTF();
