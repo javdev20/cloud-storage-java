@@ -31,6 +31,10 @@ public class Client extends JFrame {
                 getFile(cmd[1]);
             } else if ("delete".equals(cmd[0])) {
                 deleteFile(cmd[1]);
+            } else if ("auth".equals(cmd[0])) {
+                authClient(cmd[1], cmd[2]);
+            } else if ("reg".equals(cmd[0])) {
+                registClient(cmd[1], cmd[2]);
             }
         });
 
@@ -47,6 +51,34 @@ public class Client extends JFrame {
             }
         });
         setVisible(true);
+    }
+
+    private void registClient(String login, String password) {
+        try {
+            out.writeUTF("reg");
+            out.writeUTF(login);
+            out.writeUTF(password);
+
+            String status = in.readUTF();
+            JOptionPane.showMessageDialog(null, status);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void authClient(String login, String password) {
+        try {
+            out.writeUTF("auth");
+            out.writeUTF(login);
+            out.writeUTF(password);
+
+            String status = in.readUTF();
+            JOptionPane.showMessageDialog(null,status);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void deleteFile(String fileName) {
