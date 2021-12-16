@@ -1,2 +1,4 @@
 pom.xml
 .idea
+client\target\classes\*
+server\target\classes\*
